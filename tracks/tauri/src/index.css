@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  /* 自定义颜色 */
+  --color-cream: #FEF3E5;
+  --color-paper: #FFFFFF;
+  --color-ink: #342E55;
+  --color-lavender: #827BB9;
+  --color-input: #F5F0FF;
+  --color-hover: #FDF4E5;
+
+  /* 自定义圆角 */
+  --radius-4xl: 2rem;
+  --radius-5xl: 2.5rem;
+  --radius-6xl: 3rem;
+
+  /* 自定义字体 */
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* 自定义动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}

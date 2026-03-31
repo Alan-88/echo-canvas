@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>白板服务器管理后台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-label {
+            color: #999;
+            font-size: 0.75em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            color: #333;
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 16px;
+            padding: 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #f0f0f0;
+            background: #fafafa;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 18px;
+            text-align: center;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            color: #666;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .tab.active {
+            color: #667eea;
+            background: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #5568d3;
+        }
+
+        .refresh-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f5f5f5;
+            padding: 12px;
+            text-align: left;
+            font-size: 0.8em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .token {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .token:hover {
+            color: #5568d3;
+        }
+
+        .copy-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .copy-notification.show {
+            opacity: 1;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .timestamp {
+            color: #999;
+            font-size: 0.85em;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 500;
+        }
+
+        .badge.primary {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .badge.success {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .badge.warning {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .badge.danger {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .room-id {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .file-size {
+            color: #999;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 白板服务器管理后台</h1>
+            <p class="subtitle">本地管理界面 - 仅限本机访问 (127.0.0.1:3001)</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">活跃房间</div>
+                <div class="stat-value" id="active-rooms">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">已保存房间</div>
+                <div class="stat-value" id="saved-rooms">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">紧急保存</div>
+                <div class="stat-value" id="emergency-rooms">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">历史备份</div>
+                <div class="stat-value" id="backup-rooms">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">服务器版本</div>
+                <div class="stat-value" id="version" style="font-size: 1.3em;">-</div>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('saved')">💾 已保存房间</button>
+                <button class="tab" onclick="switchTab('active')">🔥 活跃房间</button>
+                <button class="tab" onclick="switchTab('emergency')">🚨 紧急保存</button>
+                <button class="tab" onclick="switchTab('backups')">📦 历史备份</button>
+            </div>
+
+            <!-- 已保存房间标签 -->
+            <div id="saved-tab" class="tab-content active">
+                <div class="section-header">
+                    <h2>已保存的房间</h2>
+                    <button class="refresh-btn" onclick="loadSavedRooms()">🔄 刷新</button>
+                </div>
+                <div id="saved-error"></div>
+                <div id="saved-container">
+                    <div class="loading">正在加载...</div>
+                </div>
+            </div>
+
+            <!-- 活跃房间标签 -->
+            <div id="active-tab" class="tab-content">
+                <div class="section-header">
+                    <h2>内存中的活跃房间</h2>
+                    <button class="refresh-btn" onclick="loadActiveRooms()">🔄 刷新</button>
+                </div>
+                <div id="active-error"></div>
+                <div id="active-container">
+                    <div class="loading">正在加载...</div>
+                </div>
+            </div>
+
+            <!-- 紧急保存标签 -->
+            <div id="emergency-tab" class="tab-content">
+                <div class="section-header">
+                    <h2>紧急保存的房间</h2>
+                    <button class="refresh-btn" onclick="loadEmergencyRooms()">🔄 刷新</button>
+                </div>
+                <div id="emergency-error"></div>
+                <div id="emergency-container">
+                    <div class="loading">正在加载...</div>
+                </div>
+            </div>
+
+            <!-- 备份标签 -->
+            <div id="backups-tab" class="tab-content">
+                <div class="section-header">
+                    <h2>历史备份文件</h2>
+                    <button class="refresh-btn" onclick="loadBackups()">🔄 刷新</button>
+                </div>
+                <div id="backups-error"></div>
+                <div id="backups-container">
+                    <div class="loading">正在加载...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="copy-notification" id="copy-notification">
+        ✓ Token已复制到剪贴板
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api/admin';
+        let currentTab = 'saved';
+
+        // 切换标签
+        function switchTab(tabName) {
+            // 更新标签按钮状态
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 更新内容显示
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            currentTab = tabName;
+
+            // 加载对应数据
+            switch (tabName) {
+                case 'saved': loadSavedRooms(); break;
+                case 'active': loadActiveRooms(); break;
+                case 'emergency': loadEmergencyRooms(); break;
+                case 'backups': loadBackups(); break;
+            }
+        }
+
+        // 加载统计信息
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                if (!response.ok) throw new Error('无法获取统计信息');
+                
+                const data = await response.json();
+                document.getElementById('active-rooms').textContent = data.activeRooms;
+                document.getElementById('saved-rooms').textContent = data.savedRooms;
+                document.getElementById('emergency-rooms').textContent = data.emergencyRooms;
+                document.getElementById('backup-rooms').textContent = data.backupRooms;
+                document.getElementById('version').textContent = data.version;
+            } catch (error) {
+                console.error('加载统计信息失败:', error);
+            }
+        }
+
+        // 加载已保存房间
+        async function loadSavedRooms() {
+            const container = document.getElementById('saved-container');
+            const errorDiv = document.getElementById('saved-error');
+            
+            container.innerHTML = '<div class="loading">正在加载...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/rooms`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const rooms = await response.json();
+                errorDiv.innerHTML = '';
+                
+                if (rooms.length === 0) {
+                    container.innerHTML = '<div class="no-data">暂无已保存的房间</div>';
+                    return;
+                }
+                
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>原始房间号</th>
+                            <th>恢复Token</th>
+                            <th>保存时间</th>
+                            <th>画布数</th>
+                            <th>图形总数</th>
+                            <th>保存次数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rooms.map(room => `
+                            <tr>
+                                <td><span class="room-id">${room.originalRoomId}</span></td>
+                                <td>
+                                    <span class="token" onclick="copyToken('${room.restoreToken}')">
+                                        ${room.restoreToken.substring(0, 8)}...
+                                    </span>
+                                </td>
+                                <td class="timestamp">${formatTimestamp(room.savedAt)}</td>
+                                <td>${room.canvasCount}</td>
+                                <td>${room.totalShapes}</td>
+                                <td><span class="badge primary">第${room.saveCount}次</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                
+                container.innerHTML = '';
+                container.appendChild(table);
+                
+            } catch (error) {
+                console.error('加载失败:', error);
+                errorDiv.innerHTML = `<div class="error">❌ 加载失败: ${error.message}</div>`;
+                container.innerHTML = '';
+            }
+        }
+
+        // 加载活跃房间
+        async function loadActiveRooms() {
+            const container = document.getElementById('active-container');
+            const errorDiv = document.getElementById('active-error');
+            
+            container.innerHTML = '<div class="loading">正在加载...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/active-rooms`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const rooms = await response.json();
+                errorDiv.innerHTML = '';
+                
+                if (rooms.length === 0) {
+                    container.innerHTML = '<div class="no-data">当前无活跃房间</div>';
+                    return;
+                }
+                
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>房间号</th>
+                            <th>画布数</th>
+                            <th>图层数</th>
+                            <th>在线用户</th>
+                            <th>空闲时长</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rooms.map(room => {
+                            const idleStatus = room.idleMinutes > 120 
+                                ? `<span class="badge danger">${room.idleMinutes}分钟（即将卸载）</span>`
+                                : room.idleMinutes > 60
+                                ? `<span class="badge warning">${room.idleMinutes}分钟</span>`
+                                : `<span class="badge success">${room.idleMinutes}分钟</span>`;
+                            
+                            return `
+                                <tr>
+                                    <td><span class="room-id">${room.roomId}</span></td>
+                                    <td>${room.canvasCount}</td>
+                                    <td>${room.layerCount}</td>
+                                    <td>${room.onlineUsers}</td>
+                                    <td>${idleStatus}</td>
+                                    <td>
+                                        ${room.hasRestoreToken 
+                                            ? '<span class="badge success">已保存</span>' 
+                                            : '<span class="badge warning">未保存</span>'}
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                `;
+                
+                container.innerHTML = '';
+                container.appendChild(table);
+                
+            } catch (error) {
+                console.error('加载失败:', error);
+                errorDiv.innerHTML = `<div class="error">❌ 加载失败: ${error.message}</div>`;
+                container.innerHTML = '';
+            }
+        }
+
+        // 加载紧急保存
+        async function loadEmergencyRooms() {
+            const container = document.getElementById('emergency-container');
+            const errorDiv = document.getElementById('emergency-error');
+            
+            container.innerHTML = '<div class="loading">正在加载...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/emergency-rooms`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const rooms = await response.json();
+                errorDiv.innerHTML = '';
+                
+                if (rooms.length === 0) {
+                    container.innerHTML = '<div class="no-data">无紧急保存记录</div>';
+                    return;
+                }
+                
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>文件名</th>
+                            <th>原房间号</th>
+                            <th>保存时间</th>
+                            <th>文件大小</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rooms.map(room => `
+                            <tr>
+                                <td><code style="font-size:0.85em">${room.filename}</code></td>
+                                <td><span class="room-id">${room.originalRoomId}</span></td>
+                                <td class="timestamp">${formatUnixTimestamp(room.savedAt)}</td>
+                                <td class="file-size">${formatFileSize(room.fileSize)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                
+                container.innerHTML = '';
+                container.appendChild(table);
+                
+            } catch (error) {
+                console.error('加载失败:', error);
+                errorDiv.innerHTML = `<div class="error">❌ 加载失败: ${error.message}</div>`;
+                container.innerHTML = '';
+            }
+        }
+
+        // 加载备份
+        async function loadBackups() {
+            const container = document.getElementById('backups-container');
+            const errorDiv = document.getElementById('backups-error');
+            
+            container.innerHTML = '<div class="loading">正在加载...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/backups`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const backups = await response.json();
+                errorDiv.innerHTML = '';
+                
+                if (backups.length === 0) {
+                    container.innerHTML = '<div class="no-data">无历史备份</div>';
+                    return;
+                }
+                
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>文件名</th>
+                            <th>关联Token</th>
+                            <th>备份时间</th>
+                            <th>文件大小</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${backups.map(backup => `
+                            <tr>
+                                <td><code style="font-size:0.85em">${backup.filename}</code></td>
+                                <td>
+                                    <span class="token" onclick="copyToken('${backup.restoreToken}')">
+                                        ${backup.restoreToken.substring(0, 8)}...
+                                    </span>
+                                </td>
+                                <td class="timestamp">${backup.backupTimestamp}</td>
+                                <td class="file-size">${formatFileSize(backup.fileSize)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                
+                container.innerHTML = '';
+                container.appendChild(table);
+                
+            } catch (error) {
+                console.error('加载失败:', error);
+                errorDiv.innerHTML = `<div class="error">❌ 加载失败: ${error.message}</div>`;
+                container.innerHTML = '';
+            }
+        }
+
+        // 复制Token
+        function copyToken(token) {
+            navigator.clipboard.writeText(token).then(() => {
+                const notification = document.getElementById('copy-notification');
+                notification.classList.add('show');
+                setTimeout(() => notification.classList.remove('show'), 2000);
+            }).catch(() => {
+                alert('复制失败，请手动复制: ' + token);
+            });
+        }
+
+        // 格式化时间戳
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+        }
+
+        // 格式化Unix时间戳
+        function formatUnixTimestamp(timestamp) {
+            const date = new Date(timestamp * 1000);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // 初始加载
+        async function init() {
+            await loadStats();
+            await loadSavedRooms();
+        }
+
+        init();
+        
+        // 自动刷新（30秒）
+        setInterval(() => {
+            loadStats();
+            switch (currentTab) {
+                case 'saved': loadSavedRooms(); break;
+                case 'active': loadActiveRooms(); break;
+                case 'emergency': loadEmergencyRooms(); break;
+                case 'backups': loadBackups(); break;
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+[package]
+name = "whiteboard-shared"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# 用于生成 TypeScript 类型定义
+ts-rs = { version = "7.0", features = ["serde-compat"] }
+uuid = { version = "1.19.0", features = ["v4", "serde"] }

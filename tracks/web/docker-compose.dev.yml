@@ -1,0 +1,56 @@
+services:
+  backend:
+    container_name: whiteboard-backend-dev
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_HOST: 0.0.0.0
+      APP_PORT: 3000
+      OCR_BASE_URL: ${OCR_BASE_URL:-}
+      OCR_API_KEY: ${OCR_API_KEY:-}
+      OCR_AUTH_HEADER: ${OCR_AUTH_HEADER:-Authorization}
+      OCR_AUTH_SCHEME: ${OCR_AUTH_SCHEME:-Bearer}
+      OCR_MODEL: ${OCR_MODEL:-}
+      OCR_REQUEST_FORMAT: ${OCR_REQUEST_FORMAT:-auto}
+      OCR_TIMEOUT_MS: ${OCR_TIMEOUT_MS:-15000}
+      OCR_PROVIDER: ${OCR_PROVIDER:-custom}
+      WS_MESSAGE_CODEC: ${WS_MESSAGE_CODEC:-json}
+      ROOM_SNAPSHOT_FORMAT: ${ROOM_SNAPSHOT_FORMAT:-json}
+    volumes:
+      - whiteboard_backend_data:/app/data
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    expose:
+      - "3000"
+    networks:
+      app_net:
+
+  frontend:
+    container_name: whiteboard-frontend-dev
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+        VITE_WS_BASE_URL: ${VITE_WS_BASE_URL:-}
+        VITE_FRONTEND_ORIGIN: ${VITE_FRONTEND_ORIGIN:-}
+        VITE_WS_MESSAGE_CODEC: ${VITE_WS_MESSAGE_CODEC:-json}
+        VITE_WS_LAYER_OP_CODEC: ${VITE_WS_LAYER_OP_CODEC:-msgpack}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    expose:
+      - "80"
+    networks:
+      app_net:
+
+volumes:
+  whiteboard_backend_data:
+
+networks:
+  app_net:
+    driver: bridge

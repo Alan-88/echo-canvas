@@ -1,0 +1,92 @@
+# ==========================================
+# Whiteboard Workspace - Root Ignore Rules
+# ==========================================
+# 根目录现在是总项目目录，工程级忽略规则以下列 tracks 为主：
+# - tracks/web
+# - tracks/base
+# - tracks/tauri
+
+# 系统文件
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+
+# 通用构建产物
+target/
+node_modules/
+dist/
+dist-ssr/
+*.local
+*.tsbuildinfo
+.snapshots/
+.root_legacy_*/
+lobby-demo.html
+
+# Web track runtime / build artifacts
+tracks/web/target/
+tracks/web/frontend/node_modules/
+tracks/web/frontend/dist/
+tracks/web/frontend/sample/
+tracks/web/admin/node_modules/
+tracks/web/backend/.env
+tracks/web/backend/data/rooms/
+tracks/web/backend/data/emergency/
+tracks/web/backend/data/backups/
+tracks/web/data/
+tracks/web/.env
+
+# Tauri track runtime / build artifacts
+tracks/tauri/target/
+tracks/tauri/node_modules/
+tracks/tauri/dist/
+tracks/tauri/.vscode/
+tracks/tauri/backend/.env
+tracks/tauri/src_backup_before_lobby_refactor/
+
+# Root transitional env files
+.env
+.env.local
+.env.*.local
+
+# Internal working memory / non-public docs
+.clinerules
+AGENTS.md
+archive/
+tracks/base/
+tracks/web/.clinerules
+tracks/web/AGENTS.md
+tracks/web/archive/
+tracks/web/BACKUP_SHARE_MANIFEST_20260318.md
+tracks/web/BUG修复总结.md
+tracks/web/PHASE*.md
+tracks/web/blueprint.md
+tracks/tauri/archive/
+tracks/tauri/notes/
+
+# 日志和临时文件
+*.log
+logs/
+*.tmp
+*.temp
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# 打包文件
+*.tgz
+*.zip
+*.tar.gz
+
+# 编辑器和IDE特定文件
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
